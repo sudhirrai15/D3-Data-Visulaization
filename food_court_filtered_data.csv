@@ -1,0 +1,28 @@
+Item_Id,Category,Menu_item,Store_Name,Price,Sales_Qty,Gross_sales,Item_Disc,Net_Sales
+110119,food,Hot Dog,Coffee Corner,2.75,940,2585,0,2585
+110025,Brew Coffee,Drip Coffee 12oz,Coffee Corner,1.8,1125,2025,0,2025
+120028,desserts,Bon Appetite,Coffee Corner,1.49,1273,1896.77,0,1896.77
+515002,Smoothie,Smoothie / Shake,Coffee Shop,3.25,181,588.25,0,588.25
+509001,hot beverages,12oz Coffee,Coffee Shop,1.8,230,414,0,414
+512001,Frappuccinos,Caramel Frap,Coffee Shop,4.35,86,374.1,0,374.1
+10049,outtakes,outtakes enterpr,Coffee Store/Papa John,2.694251261,4561,12288.48,-1.45,12287.03
+69999,Pizza,Cheese,Coffee Store/Papa John,5.25,631,3312.75,0,3312.75
+69994,Pizza,Pepperoni,Coffee Store/Papa John,5.25,625,3281.25,0,3281.25
+4000257,Breakfast,Bagel w/ CC Shmr,Einsteins,2.59,2440,6319.6,0,6319.6
+4000159,Beverages,Coffee Medium,Einsteins,1.99,1075,2139.25,0,2139.25
+4000695,entrée,Turkey BAT,Einsteins,6.99,237,1656.63,0,1656.63
+8000006,subway,Subway $,Food Court,5.592655453,11177,62509.11,0,62509.11
+50001,entrée,CFA Sandwich,Food Court,3.09,12451,38473.59,-160.68,38312.91
+50008,side,Waffle Fries,Food Court,1.65,15285,25220.25,0,25220.25
+10049,outtakes,outtakes enterpr,Grab n go,3.572607216,1469,5248.16,0,5248.16
+10048,Entrée,Burrito,Grab n go,2.49,1196,2978.04,0,2978.04
+4001030,outtakes,Parfait,Grab n go,3.95,484,1911.8,0,1911.8
+4003199,entrée,Santa Fe,Jason's Deli,7.19,537,3861.03,0,3861.03
+4003189,entrée,California Club,Jason's Deli,7.09,518,3672.62,0,3672.62
+4003191,entrée,Club Royale,Jason's Deli,7.09,387,2743.83,0,2743.83
+4003238,hot beverages,Drip Coffee Tall,N Brew,1.8,650,1170,0,1170
+4003239,hot beverages,Drip Coffee Gr,N Brew,2.1,399,837.9,-10.5,827.4
+4003250,hot beverages,Cookies,N Brew,1.99,396,788.04,0,788.04
+2500024,specials,Chickn Tenders,Pub,5.99,1080,6469.2,0,6469.2
+2200003,Burger,Texan Burger,Pub,6.99,617,4312.83,0,4312.83
+2500006,specials,Buff Chk Wrap,Pub,5.99,719,4306.81,0,4306.81

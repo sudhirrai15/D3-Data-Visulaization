@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="ISO-8859-1">
+	<title>Sudhir_Rai - D3 Viz</title>
+	<script type="text/javascript" , src="http://d3js.org/d3.v3.js"></script>
+	<script src="https://tonejs.github.io/build/Tone.js" charset="utf-8"></script>
+	
+	
+	<style type="text/css">
+		body {
+			background-color: lightgrey
+		}
+		
+		svg {
+			background-color: white
+		}
+		
+		.axis path,
+		.axis line {
+			fill: none;
+			stroke: black;
+			shape-rendering: crispEdge;
+		}
+		
+		.axis text {
+			font-family: sans-serif;
+			font-size: 11px;
+		}
+		
+		div.tooltip {
+			position: absolute;
+			text-align: center;
+			width: 150px;
+			height: 20px;
+			padding: 2px;
+			font: 12px sans-serif;
+			background: #2B9CE8;
+			border: 0px;
+			border-radius: 8px;
+			pointer-event: none;
+		}
+		
+	</style>
+</head>
+<body>
+
+	<label for="droplist">Sonification Mode</label>
+	<select id="droplist">
+	
+		<option value="1">Pluck Instrument</option>
+		<option value="2" selected="selected">Membrane</option>
+		<option value="3">Mono Synth</option>
+		<option value="4">Amplitude Modulation</option>
+		<option value="5">Frequency Modulation</option>
+		<option value="6">Disable</option>
+	</select>
+
+		
+	<div align="center"></div>
+	<script type="text/javascript">
+		var w = 800;
+		
+		var h = 600;
+		
+		var e;
+		
+		var sel;
+		
+		var padding = [30, 10, 20, 150]
+		
+		var widthScale = d3.scale.linear()
+								.range([0,w- padding[1] - padding[3]]);
+		
+		var heightScale = d3.scale.ordinal().rangeRoundBands([padding[0],h-padding[2]], 0.1);
+		
+		var xAxis = d3.svg.axis().scale(widthScale).orient("bottom");
+		
+		var yAxis = d3.svg.axis().scale(heightScale).orient("left");
+		
+		var div = d3.select("body").append("div")
+			.attr("class","tooltip")
+			.style("opacity",0);
+		
+		
+		var svg = d3.select("div")
+			.append('svg')
+			.attr('height',h)
+			.attr('width',w)
+			.style("border","2px solid black");	
+		
+		var color = d3.scale.ordinal().range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", 
+			"#a05d56", "#d0743c", "#ff8c00","#C9FF00","#FFDA00"]);
+		
+		var plucky = new Tone.PluckSynth({   //1
+			"attackNoise": 1,
+			"dampening": 4000,
+			"resonance": 0.9
+			}).toMaster();
+		
+		var membrane = new Tone.MembraneSynth({
+			
+				"pitchDecay": 0.05,
+				"octaves": 0.1,
+				"oscillator": {
+					"type":  "sine"
+				},
+				
+				"envelope": {
+					"attack": 0.01,
+					"decay": 0.4,
+					"sustain": 0.01,
+					"release": 1.2,
+					"attackCurve": "exponential"
+				}
+		}).toMaster();
+		
+		var synth = new Tone.MonoSynth({
+			"oscillator": {
+				"type": "triangle"
+			},
+			"envelope": {
+				"attack": 0.05,
+				"decay": 0.3,
+				"sustain": 0.1,
+				"release": 0.8
+			},
+			
+			"filterEnvelope": {
+					"attack": 0.001,
+					"decay": 0.7,
+					"sustain": 0.1,
+					"release": 0.3,
+					"baseFrequency": 300,
+					"octaves": 4
+			}
+			
+		}).toMaster();
+		
+		var am = new Tone.AMSynth({
+			"harmonicity": 3,
+			"detune": 0,
+			"oscillator": {
+				"type": "sine"
+			},
+			"envelope": {
+				"attack": 0.01,
+				"decay": 0.01,
+				"sustain": 1,
+				"release": 0.5
+			},
+			"modulationEnvelope": {
+				"attack": 0.5,
+				"decay": 0,
+				"sustain": 1,
+				"release": 0.5
+			}
+		}).toMaster();
+		
+		var fm = new Tone.FMSynth({
+			"harmonicity": 3,
+			"modulationIndex": 10,
+			"detune": 0,
+			"oscillator": {
+				"type": "sine"
+			},
+			"envelope": {
+				"attack": 0.01,
+				"decay": 0.01,
+				"sustain": 1,
+				"release": 0.5
+			},
+			"modulation": {
+				"type": "square"
+			},
+			"modulationEnvelope": {
+				"attack": 0.,
+				"decay": 0,
+				"sustain": 1,
+				"release": 0.5
+			}
+		}).toMaster();
+		
+		var out_max = 1500; //the maximum frequency (in Hz) of the sonification . Can be adjusted
+		
+		var out_min = 500; // The minimum frequency(in Hz) of the sonification. 
+		
+		var in_min; // The minimum value of the parameter to sonify from the dataset. Here it's d.Price
+		
+		var in_max; // The maximum valeu of the parameter to sonify from the dataset. Here it's d.price
+		
+		var freq; // The scaled frequency that corresponds to the parameter from dataset to be sonified
+		
+		d3.csv("food_court_filtered_data.csv", function (data) 
+			{
+				data.sort(function (a, b) {
+					return d3.descending(+a.Gross_sales, +b.Gross_sales);
+					}
+				)
+				
+				widthScale.domain([0, d3.max(data, function (d) { return +d.Gross_sales})]);
+				
+				heightScale.domain(data.map(function (d) { return d.Menu_item;}));
+				
+				color.domain(data.map(function (d) { return d.Store_Name }));
+				
+				var rect = svg.selectAll('rect')
+					.data(data)
+					.enter()
+					.append('rect')
+					.on("mouseover", function(d) {
+						
+						div.transition()
+							.duration(200)
+							.style("opacity", .8)
+						div.html("Average Price is $" + d.Price)
+							.style("left", (d3.event.pageX) + "px")
+							.style("top", (d3.event.pageY + 15) + "px");
+						d3.select(this)
+							.attr("fill","red");
+						
+						d3.select(this)
+						e= document.getElementById("droplist");
+						
+						in_min = (d3.min(data, function(d){ return d.Price})); // min value of param form data
+						
+						in_max = (d3.max(data, function(d){ return d.Price})); // max value of param from data
+						
+						i_min = in_min - 1;
+						
+						in_max = in_max + 1;
+						
+						freq = ((d.Price -in_min) *  (out_max - out_min))/ (in_max - in_min) + out_min;
+					    //scaling happening in the above statement.
+					    // console.log(fre); use this t check mapped frequency output to verify/test
+					    
+					    sel = e.options[e.selectedIndex].value;
+					    
+					    if (sel == 1) {
+					    	plucky.triggerAttack(freq);
+					    }
+					    if (sel == 2) {
+					    	membrane.triggerAttackRelease(freq);
+					    }
+					    if (sel == 3) {
+					    	synth.triggerAttackRelease((freq), "8n");
+					    }
+					    if (sel == 4) {
+					    	am.triggerAttackRelease((freq), "4n");
+					    }
+					    if (sel == 5) {
+					    	synth.triggerAttackRelease((freq), "4n");
+					    }
+					    if (sel == 6) {
+					    
+					    }
+					    
+						}
+					    )
+					.on("mouseout", function (d,i){
+						div.transition()
+							.duration(500)
+							.style("opacity", 0);
+					d3.select(this)
+							.attr("fill",function(d) {
+								return color(d.Store_Name);
+							});
+					});
+					
+				rect.attr('x', padding[3])
+				
+				rect.attr('y', function (d, i) {
+					 return heightScale(d.Menu_item);
+					}
+				)
+				rect.attr('width', function (d) {
+					return widthScale(+d.Gross_sales);
+					}
+				)
+				rect.attr('height', heightScale.rangeBand());
+				
+				rect.attr("fill", function (d) {
+					return color(d.Store_Name);
+				})
+				
+				svg.append("g")
+					.attr("class", "x axis")
+					.attr("transform", "translate(" + padding[3] + "," + (h- padding[2]) + ")")
+					.call(xAxis);
+				
+				
+				svg.append("g")
+				.attr("class", "y axis")
+				.attr("transform", "translate(" + (padding[3] - 5) + ",0)")
+				.call(yAxis);
+				
+				svg.append("text")
+					.attr("x", padding[3] + 100)
+					.attr("y", padding[0])
+					.style("font-size", "20px")
+					.style("text-decoration", "underline")
+					.text("Product Gross Sales By Store - Sudhir Rai");
+				
+				var legend = svg.selectAll(".legend")
+								.data(color.domain().slice())
+								.enter()
+								.append("g")
+								.attr("class", "legend")
+								.attr("transform", function (d,i) {
+									return "translate(0," + i * 20 + ")";
+								}
+							);
+				
+				legend.append("rect")
+					.attr("x", w - 30)
+					.attr("y", padding[3])
+					.attr("width", 18)
+					.attr("height", 18)
+					.style("fill", color);
+				
+				legend.append("text")
+					.attr("x", w - 36)
+					.attr("y", padding[3])
+					.attr("dy", ".80em")
+					.style("font-family", "sans-serif")
+					.style("font-size", "15px")
+					.style("text-anchor", "end")
+					.text(function(d){
+						return d;
+					})
+							
+			});
+	</script>
+
+</body>
+</html>
